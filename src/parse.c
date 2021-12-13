@@ -4,13 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct {
-  FJNode *a;
-  FJNode *b;
-} NodeTuple;
-
-typedef FJNode *(ParseFunc(FJParser *parser));
-
 #define CAPTURE_ERROR(node, code)                                              \
   {                                                                            \
     if (!code) {                                                               \
