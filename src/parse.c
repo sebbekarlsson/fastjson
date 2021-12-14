@@ -7,6 +7,7 @@
 #define CAPTURE_ERROR(node, code)                                              \
   {                                                                            \
     if (!code) {                                                               \
+      fprintf(stderr, "json error code %d\n", code);                           \
       node->type = FJ_NODE_ERROR;                                              \
       return node;                                                             \
     }                                                                          \
@@ -36,9 +37,20 @@ static inline int next(FJParser *parser, FJTokenType type) {
   return 1;
 }
 
+static inline void node_attach_string(FJParser *parser, FJNode *node) {
+  if (parser->token->start && parser->token->end) {
+    node->str_start = parser->token->start;
+    node->str_end = parser->token->end;
+    node->value_str = fj_node_string(node, parser->lexer);
+  } else {
+    node->value_str = strdup(parser->token->value ? parser->token->value : "");
+  }
+}
+
 static inline FJNode *parse_string(FJParser *parser) {
   FJNode *node = init_fj_node(FJ_NODE_STRING);
-  node->value_str = strdup(parser->token->value ? parser->token->value : "");
+  node_attach_string(parser, node);
+
   CAPTURE_ERROR(node, next(parser, FJ_TOKEN_STRING));
 
   return node;
@@ -46,16 +58,25 @@ static inline FJNode *parse_string(FJParser *parser) {
 
 static inline FJNode *parse_id(FJParser *parser) {
   FJNode *node = init_fj_node(FJ_NODE_ID);
-  node->value_str = strdup(parser->token->value ? parser->token->value : "");
+  node_attach_string(parser, node);
+
   CAPTURE_ERROR(node, next(parser, FJ_TOKEN_ID));
 
   return node;
 }
 
-static inline FJNode *parse_number(FJParser *parser) {
-  FJNode *node = init_fj_node(FJ_NODE_NUMBER);
-  node->value_num = parser->token->value ? atof(parser->token->value) : 0;
-  CAPTURE_ERROR(node, next(parser, FJ_TOKEN_NUMBER));
+static inline FJNode *parse_int(FJParser *parser) {
+  FJNode *node = init_fj_node(FJ_NODE_INT);
+  node->value_int = parser->token->value ? atoi(parser->token->value) : 0;
+  CAPTURE_ERROR(node, next(parser, FJ_TOKEN_INT));
+
+  return node;
+}
+
+static inline FJNode *parse_float(FJParser *parser) {
+  FJNode *node = init_fj_node(FJ_NODE_FLOAT);
+  node->value_float = parser->token->value ? atof(parser->token->value) : 0;
+  CAPTURE_ERROR(node, next(parser, FJ_TOKEN_FLOAT));
 
   return node;
 }
@@ -88,7 +109,8 @@ static inline FJNode *parse_dict(FJParser *parser) {
   fj_node_add_child(node, child);
 
   if (child && child->key && child->key->value_str) {
-    fj_node_assign_dict(node, (const char *)child->key, child->value);
+    fj_node_assign_dict(node, (const char *)child->key->value_str,
+                        child->value);
   }
 
   while (parser->token->type == FJ_TOKEN_COMMA) {
@@ -102,7 +124,8 @@ static inline FJNode *parse_dict(FJParser *parser) {
     fj_node_add_child(node, child);
 
     if (child && child->key && child->key->value_str) {
-      fj_node_assign_dict(node, (const char *)child->key, child->value);
+      fj_node_assign_dict(node, (const char *)child->key->value_str,
+                          child->value);
     }
   }
 
@@ -121,18 +144,34 @@ static inline FJNode *parse_array(FJParser *parser) {
     return node;
   }
 
-  while (parser->token->type != FJ_TOKEN_RBRACKET) {
+  FJNode *child = parse_entry(parser);
+  if (!child || child->type == FJ_NODE_ERROR)
+    return node;
+  fj_node_add_child(node, child);
+
+  while (parser->token->type == FJ_TOKEN_COMMA) {
+    CAPTURE_ERROR(node, next(parser, FJ_TOKEN_COMMA));
+
     FJNode *child = parse_entry(parser);
     if (!child)
       break;
     if (child->type == FJ_NODE_ERROR)
       break;
     fj_node_add_child(node, child);
-
-    if (parser->token->type == FJ_TOKEN_COMMA) {
-      CAPTURE_ERROR(child, next(parser, FJ_TOKEN_COMMA));
-    }
   }
+  /*
+    while (parser->token->type != FJ_TOKEN_RBRACKET) {
+      FJNode *child = parse_entry(parser);
+      if (!child)
+        break;
+      if (child->type == FJ_NODE_ERROR)
+        break;
+      fj_node_add_child(node, child);
+
+      if (parser->token->type == FJ_TOKEN_COMMA) {
+        CAPTURE_ERROR(child, next(parser, FJ_TOKEN_COMMA));
+      }
+    }*/
 
   CAPTURE_ERROR(node, next(parser, FJ_TOKEN_RBRACKET));
 
@@ -153,8 +192,11 @@ FJNode *parse_entry(FJParser *parser) {
   case FJ_TOKEN_ID:
     return parse_id(parser);
     break;
-  case FJ_TOKEN_NUMBER:
-    return parse_number(parser);
+  case FJ_TOKEN_INT:
+    return parse_int(parser);
+    break;
+  case FJ_TOKEN_FLOAT:
+    return parse_float(parser);
     break;
   default: {};
   }

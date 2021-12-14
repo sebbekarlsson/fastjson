@@ -2,26 +2,35 @@
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
-  JSON *data = json_parse_file(argv[1]);
-  JSONIterator it = json_iterate(data);
-
-  JSON *node = 0;
-  while ((node = json_iterator_next(&it)) != 0) {
-    if (json_is_dict(node)) {
-      JSONIterator kvit = json_iterate_kv(node);
-
-      JSON *kv = 0;
-      while ((kv = json_iterator_next(&kvit)) != 0) {
-        char *key = json_key(kv);
-        char *value = json_get_string(kv, key);
-        if (!key || !value)
-          continue;
-        printf("%s:%s\n", key, value);
-      }
-    }
+  if (argc < 2) {
+    fprintf(stderr, "Please specify file.\n");
+    return 1;
   }
 
-  json_free(data);
+  unsigned int show_progress =
+      argc >= 3 && argv[2] && strcmp(argv[2], "progress") == 0;
+
+  JSONOptions options = {};
+  options.optimized_strings = 1;
+  JSONAsync *as = json_parse_file_async(argv[1], &options);
+
+  if (show_progress) {
+    while (as->data == 0) {
+      printf("\rprogress: %3.3f%%", as->progress);
+      fflush(stdout);
+    }
+
+    printf("\n");
+  }
+
+  json_await(as);
+  printf("%s\n", json_stringify(as->data));
+  json_free(as->data);
+  json_async_free(as);
+
+  if (show_progress) {
+    printf("done parsing.\n");
+  }
 
   return 0;
 }

@@ -65,8 +65,8 @@ if (NOT TARGET hashmap_static)
 endif()
 
 
-target_link_libraries(fjson_e PUBLIC hashmap_static)
-target_link_libraries(fjson PUBLIC hashmap_static)
-target_link_libraries(fjson_static PUBLIC hashmap_static)
+target_link_libraries(fjson_e PUBLIC hashmap_static pthread m)
+target_link_libraries(fjson PUBLIC hashmap_static pthread m)
+target_link_libraries(fjson_static PUBLIC hashmap_static pthread m)
 
 add_subdirectory(tests)

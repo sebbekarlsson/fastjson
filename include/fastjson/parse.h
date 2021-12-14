@@ -1,5 +1,6 @@
 #ifndef FAST_JSON_PARSE_H
 #define FAST_JSON_PARSE_H
+#include <fastjson/async.h>
 #include <fastjson/lex.h>
 #include <fastjson/node.h>
 

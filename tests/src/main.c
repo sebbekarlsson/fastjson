@@ -5,7 +5,7 @@
 #define TEST(name, source, root_name, body)                                    \
   void test_##name() {                                                         \
     printf("TEST: %s\n", #name);                                               \
-    JSON *root_name = json_parse_file(source);                                 \
+    JSON *root_name = json_parse_file(source, 0);                                 \
     {body} printf("(%s) OK.\n", #name);                                        \
   }
 

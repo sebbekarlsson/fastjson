@@ -1,6 +1,7 @@
 #include <ctype.h>
 #include <fastjson/lex.h>
 #include <fastjson/utils.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/param.h>
@@ -17,6 +18,15 @@ static inline void advance(FJLexer *lexer) {
       lexer->col = 0;
     } else {
       lexer->col += 1;
+    }
+
+    if (lexer->json_async) {
+      pthread_mutex_lock(&lexer->json_async->lock);
+      lexer->json_async->row = lexer->row;
+      lexer->json_async->col = lexer->col;
+      lexer->json_async->progress =
+          ceilf(((float)lexer->i / (float)lexer->length) * 100.0f);
+      pthread_mutex_unlock(&lexer->json_async->lock);
     }
   }
 }
@@ -76,8 +86,9 @@ static inline char *collect_id(FJLexer *lexer) {
   return str.value;
 }
 
-static inline char *collect_number(FJLexer *lexer) {
+static inline char *collect_number(FJLexer *lexer, FJTokenType *type) {
   FJString str = FJ_STRING("");
+  *type = FJ_TOKEN_INT;
 
   while (isdigit(lexer->c)) {
     concat(&str, lexer);
@@ -88,6 +99,8 @@ static inline char *collect_number(FJLexer *lexer) {
     while (isdigit(lexer->c)) {
       concat(&str, lexer);
     }
+
+    *type = FJ_TOKEN_FLOAT;
   }
 
   return str.value;
@@ -125,6 +138,30 @@ static inline char *collect_str(FJLexer *lexer) {
   return str.value;
 }
 
+static inline void collect_str_optimized(FJLexer *lexer, FJToken *token) {
+  char start = lexer->c;
+  advance(lexer);
+
+  token->start = &lexer->src[lexer->i];
+
+  while (lexer->c != start) {
+    // escaped quotes
+    if (lexer->c == '\\' && peek(lexer, 1) == '\\') {
+      advance(lexer);
+      advance(lexer);
+      continue;
+    }
+    if (lexer->c == '\\' && peek(lexer, 1) == start) {
+      advance(lexer);
+    }
+    advance(lexer);
+  }
+
+  token->end = &lexer->src[lexer->i];
+  advance(lexer);
+  token->value = 0;
+}
+
 FJToken lex(FJLexer *lexer) {
   skip_white(lexer);
   if (FINISHED(lexer))
@@ -140,13 +177,16 @@ FJToken lex(FJLexer *lexer) {
     return token;
   } break;
   case FJ_TOKEN_NUMBER: {
-    token.value = collect_number(lexer);
-    token.type = FJ_TOKEN_NUMBER;
+    token.value = collect_number(lexer, &token.type);
     return token;
   } break;
   case FJ_TOKEN_SINGLE_QUOTE:
   case FJ_TOKEN_DOUBLE_QUOTE: {
-    token.value = collect_str(lexer);
+    if (lexer->optimized_strings) {
+      collect_str_optimized(lexer, &token);
+    } else {
+      token.value = collect_str(lexer);
+    }
     token.type = FJ_TOKEN_STRING;
     return token;
   } break;

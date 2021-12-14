@@ -1,3 +1,4 @@
+#include <fastjson/lex.h>
 #include <fastjson/mem.h>
 #include <fastjson/node.h>
 #include <stdlib.h>
@@ -25,8 +26,10 @@ void fj_node_add_child(FJNode *node, FJNode *child) {
 void fj_node_free(FJNode *node) {
   if (!node)
     return;
-  if (node->value_str != 0)
+  if (node->value_str != 0) {
     free(node->value_str);
+    node->value_str = 0;
+  }
 
   if (node->children) {
     for (uint32_t i = 0; i < node->children_length; i++) {
@@ -52,6 +55,13 @@ void fj_node_free(FJNode *node) {
     node->map = 0;
   }
 
+  if (node->source != 0)
+
+  {
+    free(node->source);
+    node->source = 0;
+  }
+
   free(node);
 }
 
@@ -62,4 +72,22 @@ void fj_node_assign_dict(FJNode *node, const char *key, FJNode *value) {
     return;
 
   map_set(node->map, (char *)key, value);
+}
+
+char *fj_node_string(FJNode *node, FJLexer *lexer) {
+  char *start = node->str_start;
+  char *end = node->str_end;
+  if (!start || !end)
+    return 0;
+
+  uint32_t length = end - start;
+
+  if (!length)
+    return 0;
+
+  char *s = FJ_CALLOC(char, length + 1);
+
+  memcpy(&s[0], start, length);
+
+  return s;
 }

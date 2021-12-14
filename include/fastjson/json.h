@@ -1,5 +1,6 @@
 #ifndef FAST_JSON_H
 #define FAST_JSON_H
+#include <fastjson/async.h>
 #include <fastjson/node.h>
 #include <fastjson/parse.h>
 
@@ -16,8 +17,11 @@ JSONIterator json_iterate(JSON *node);
 JSONIterator json_iterate_kv(JSON *node);
 JSON *json_iterator_next(JSONIterator *iterator);
 
-JSON *json_parse(const char *contents);
-JSON *json_parse_file(const char *filepath);
+JSON *json_parse(const char *contents, JSONOptions *options);
+JSON *json_parse_file(const char *filepath, JSONOptions *options);
+
+void json_await(JSONAsync *json_async);
+
 void json_free(JSON *node);
 
 JSON *json_get(JSON *node, const char *key);
@@ -36,5 +40,7 @@ unsigned int json_is_array(JSON *json);
 unsigned int json_is_dict(JSON *json);
 
 char *json_key(JSON *node);
+
+char *json_stringify(JSON *node);
 
 #endif

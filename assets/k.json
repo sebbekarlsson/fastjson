@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "sources": [
+    "webpack:///webpack/bootstrap",
+    "webpack:///./src/app.ts",
+    "webpack:///./src/utils.ts"
+  ],
+  "names": ["hej", "yo"]
+}

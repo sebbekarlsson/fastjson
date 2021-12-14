@@ -9,6 +9,8 @@ typedef enum {
   FJ_TOKEN_LBRACKET,
   FJ_TOKEN_RBRACKET,
   FJ_TOKEN_NUMBER,
+  FJ_TOKEN_FLOAT,
+  FJ_TOKEN_INT,
   FJ_TOKEN_STRING,
   FJ_TOKEN_SINGLE_QUOTE,
   FJ_TOKEN_DOUBLE_QUOTE,
@@ -21,6 +23,8 @@ typedef struct FAST_JSON_TOKEN_STRUCT {
   FJTokenType type;
   char *value;
   char c;
+  char *start;
+  char *end;
 } FJToken;
 
 #define FJ_TOKEN(type, value, character) ((FJToken){type, value, character})
