@@ -3,14 +3,18 @@
 #include <fastjson/async.h>
 #include <fastjson/node.h>
 #include <fastjson/parse.h>
+#include <fastjson/config.h>
+
+#define NEW_JSON_DICT() (init_fj_node(FJ_NODE_DICT))
+#define NEW_JSON_ARRAY() (init_fj_node(FJ_NODE_ARRAY))
 
 typedef FJNode JSON;
 
 typedef struct FAST_JSON_ITERATOR_STRUCT {
   JSON *current;
-  uint32_t index;
+  JSON_LENGTH_INT index;
   JSON **items;
-  uint32_t length;
+  JSON_LENGTH_INT length;
 } JSONIterator;
 
 JSONIterator json_iterate(JSON *node);
@@ -24,17 +28,43 @@ void json_await(JSONAsync *json_async);
 
 void json_free(JSON *node);
 
-JSON *json_get(JSON *node, const char *key);
+int json_write(JSON* node, const char* filepath, const char* mode);
 
+JSON *json_get(JSON *node, const char *key);
 float json_get_float(JSON *node, const char *key);
-int json_get_int(JSON *node, const char *key);
+//double json_get_double(JSON *node, const char *key);
+uint32_t json_get_uint32(JSON *node, const char *key);
+uint64_t json_get_uint64(JSON *node, const char *key);
+
+
+int32_t json_get_int32(JSON *node, const char *key);
+int64_t json_get_int64(JSON *node, const char *key);
+int64_t json_get_int(JSON *node, const char *key);
+
 float json_get_number(JSON *node, const char *key);
 char *json_get_string(JSON *node, const char *key);
 JSONIterator json_get_array(JSON *node, const char *key);
 
-void json_keys(JSON *node, char ***keys, uint32_t *len);
 
-void json_values(JSON *node, JSON **values, uint32_t *len);
+JSON* json_set(JSON* node, const char* key, JSON* value);
+JSON* json_set_float(JSON* node, const char* key, float value);
+//JSON* json_set_double(JSON* node, const char* key, double value);
+
+JSON* json_set_uint32(JSON* node, const char* key, uint32_t value);
+JSON* json_set_uint64(JSON* node, const char* key, uint64_t value);
+
+JSON* json_set_int32(JSON* node, const char* key, int32_t value);
+JSON* json_set_int64(JSON* node, const char* key, int64_t value);
+
+JSON* json_set_int(JSON* node, const char* key, int64_t value);
+JSON* json_set_number(JSON* node, const char* key, float value);
+JSON* json_set_string(JSON* node, const char* key, const char* value);
+JSON* json_set_array(JSON* node, const char* key, JSON** children, uint32_t length);
+JSON* json_push(JSON* node, const char* key, JSON* value);
+
+void json_keys(JSON *node, char ***keys, JSON_LENGTH_INT *len);
+
+void json_values(JSON *node, JSON **values, JSON_LENGTH_INT *len);
 
 unsigned int json_is_array(JSON *json);
 unsigned int json_is_dict(JSON *json);

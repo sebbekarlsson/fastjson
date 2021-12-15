@@ -1,7 +1,18 @@
 #include <fastjson/json.h>
 #include <stdio.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
+  JSON* dict = NEW_JSON_DICT();
+  json_set_string(dict, "name", "john doe");
+  json_set_int(dict, "age", 33);
+  json_set_float(dict, "weight", 2132.5f);
+
+  json_write(dict, "data.json", "w+");
+
+  return 0;
+}
+
+int main2(int argc, char *argv[]) {
   if (argc < 2) {
     fprintf(stderr, "Please specify file.\n");
     return 1;
@@ -12,6 +23,7 @@ int main(int argc, char *argv[]) {
 
   JSONOptions options = {};
   options.optimized_strings = 1;
+  options.ignore_int_types = 0;
   JSONAsync *as = json_parse_file_async(argv[1], &options);
 
   if (show_progress) {

@@ -1,5 +1,6 @@
 #include <fastjson/mem.h>
 #include <fastjson/parse.h>
+#include <fastjson/utils.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,7 +68,29 @@ static inline FJNode *parse_id(FJParser *parser) {
 
 static inline FJNode *parse_int(FJParser *parser) {
   FJNode *node = init_fj_node(FJ_NODE_INT);
-  node->value_int = parser->token->value ? atoi(parser->token->value) : 0;
+  char* value = parser->token->value;
+  if (!value) return node;
+
+  if (parser->ignore_int_types) {
+    node->value_int = atoi(value);
+    node->value_uint32 = node->value_int;
+  } else {
+    node->value_uint64 = atoll(value);
+    node->value_uint32 = atol(value);
+    node->value_int = node->value_uint32;
+
+    JSONIntegerType int_type = fj_string_int_type(value);
+
+    switch (int_type) {
+      case JSON_UINT32: node->type = FJ_NODE_UINT32; break;
+      case JSON_UINT64: node->type = FJ_NODE_UINT64; break;
+      case JSON_INT32: node->type = FJ_NODE_INT32; break;
+      case JSON_INT64: node->type = FJ_NODE_INT64; break;
+      default: { node->type = FJ_NODE_INT; }
+    }
+
+  }
+
   CAPTURE_ERROR(node, next(parser, FJ_TOKEN_INT));
 
   return node;
@@ -76,6 +99,7 @@ static inline FJNode *parse_int(FJParser *parser) {
 static inline FJNode *parse_float(FJParser *parser) {
   FJNode *node = init_fj_node(FJ_NODE_FLOAT);
   node->value_float = parser->token->value ? atof(parser->token->value) : 0;
+//  node->value_double = (double)node->value_float;
   CAPTURE_ERROR(node, next(parser, FJ_TOKEN_FLOAT));
 
   return node;

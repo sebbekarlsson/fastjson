@@ -17,6 +17,11 @@ JSON *json_parse(const char *contents, JSONOptions *options) {
   }
 
   FJParser parser = (FJParser){&lexer, 0};
+
+  if (options) {
+    parser.ignore_int_types = options->ignore_int_types;
+  }
+
   JSON *root = parse(&parser);
 
   return root;
@@ -121,17 +126,63 @@ JSON *json_get(JSON *node, const char *key) {
   return (JSON *)map_get_value(node->map, (char *)key);
 }
 
+int64_t json_get_int(JSON *node, const char *key) {
+  JSON *value = json_get(node, key);
+  if (!value)
+    return 0;
+
+  uint64_t v = (uint64_t)OR(value->value_int64, value->value_int32);
+  uint64_t v2 = (uint64_t)OR(value->value_uint64, value->value_uint32);
+
+  return OR(v, v2);
+}
+
 float json_get_float(JSON *node, const char *key) {
   JSON *value = json_get(node, key);
   if (!value)
     return 0;
-  return OR(value->value_float, (float)value->value_int);
+  return (float)OR(value->value_float, OR(value->value_int, OR(value->value_uint32, value->value_int32)));
 }
-int json_get_int(JSON *node, const char *key) {
+/*double json_get_double(JSON *node, const char *key) {
   JSON *value = json_get(node, key);
   if (!value)
     return 0;
-  return OR(value->value_int, (int)value->value_float);
+  return (double)OR(value->value_double, OR(value->value_float, OR(value->value_int, OR(value->value_uint32, value->value_int32))));
+}*/
+uint32_t json_get_uint32(JSON *node, const char *key) {
+  JSON *value = json_get(node, key);
+  if (!value)
+    return 0;
+
+  return (uint32_t)OR(OR(value->value_uint32, value->value_int), value->value_float);
+}
+
+uint64_t json_get_uint64(JSON *node, const char *key) {
+  JSON *value = json_get(node, key);
+  if (!value)
+    return 0;
+  return (uint64_t)OR(OR(value->value_uint64, value->value_uint32), OR(value->value_float, value->value_float));
+}
+
+
+int32_t json_get_int32(JSON *node, const char *key) {
+  JSON *value = json_get(node, key);
+  if (!value)
+    return 0;
+
+  return (int32_t)OR(OR(value->value_int32, value->value_uint32), value->value_float);
+}
+
+int64_t json_get_int64(JSON *node, const char *key) {
+  JSON *value = json_get(node, key);
+  if (!value)
+    return 0;
+  return (int64_t)OR(OR(value->value_int64, node->value_uint64), value->value_float);
+}
+
+
+JSON* json_set_int(JSON* node, const char* key, int64_t value) {
+  return json_set_int64(node, key, value);
 }
 float json_get_number(JSON *node, const char *key) {
   return OR(json_get_float(node, key), (float)json_get_int(node, key));
@@ -152,7 +203,7 @@ JSONIterator json_get_array(JSON *node, const char *key) {
   return json_iterate(value);
 }
 
-void json_keys(JSON *node, char ***keys, uint32_t *len) {
+void json_keys(JSON *node, char ***keys, JSON_LENGTH_INT *len) {
   if (!node)
     return;
   if (!node->map)
@@ -250,13 +301,43 @@ char *json_stringify_string(JSON *node) {
 
 char *json_stringify_float(JSON *node) {
   char buff[128];
-  sprintf(buff, "%12.6f", node->value_float);
+  sprintf(buff, "%12.6f", (float)OR(node->value_float, OR(node->value_uint32, node->value_int32)));
   return strdup(buff);
 }
 
+/*char *json_stringify_double(JSON *node) {
+  char buff[128];
+  sprintf(buff, "%12.6f", (float)OR(OR(node->value_double, node->value_float), OR(node->value_uint32, node->value_int32)));
+  return strdup(buff);
+}*/
+
 char *json_stringify_int(JSON *node) {
   char buff[128];
-  sprintf(buff, "%d", node->value_int);
+  sprintf(buff, "%d", (int)OR(OR(node->value_int, node->value_int32), node->value_uint32));
+  return strdup(buff);
+}
+
+char *json_stringify_uint32(JSON *node) {
+  char buff[128];
+  sprintf(buff, "%d", OR(node->value_uint32, node->value_int32));
+  return strdup(buff);
+}
+
+char *json_stringify_uint64(JSON *node) {
+  char buff[128];
+  sprintf(buff, "%ld", (uint64_t)OR(OR(OR(node->value_uint64, node->value_int64), node->value_uint32), node->value_int32));
+  return strdup(buff);
+}
+
+char *json_stringify_int64(JSON *node) {
+  char buff[128];
+  sprintf(buff, "%ld", (int64_t)OR(node->value_int64, node->value_int32));
+  return strdup(buff);
+}
+
+char *json_stringify_int32(JSON *node) {
+  char buff[128];
+  sprintf(buff, "%d", (int32_t)OR(node->value_int32, node->value_uint32));
   return strdup(buff);
 }
 
@@ -282,12 +363,166 @@ char *json_stringify(JSON *node) {
   case FJ_NODE_FLOAT:
     return json_stringify_float(node);
     break;
+  //case FJ_NODE_DOUBLE:
+  //  return json_stringify_double(node);
+  //  break;
   case FJ_NODE_INT:
     return json_stringify_int(node);
+    break;
+  case FJ_NODE_UINT32:
+    return json_stringify_uint32(node);
+    break;
+  case FJ_NODE_UINT64:
+    return json_stringify_uint64(node);
+    break;
+  case FJ_NODE_INT64:
+    return json_stringify_int64(node);
+    break;
+  case FJ_NODE_INT32:
+    return json_stringify_int64(node);
     break;
   case FJ_NODE_TUPLE:
     return json_stringify_tuple(node);
     break;
   default: { return strdup(""); } break;
   }
+}
+
+
+JSON* json_set(JSON* node, const char* key, JSON* value) {
+  if (!key || !node || !value) return 0;
+  JSON* existing = json_get(node, key);
+  if (existing) {
+    json_free(existing);
+  }
+
+  if (node->type == FJ_NODE_DICT || node->map != 0) {
+    JSON* tuple = init_fj_node(FJ_NODE_TUPLE);
+    tuple->key = init_fj_node(FJ_NODE_STRING);
+    tuple->key->value_str = strdup(key);
+    tuple->value = value;
+    fj_node_add_child(node, tuple);
+    map_set(node->map, (char*)key, value);
+  }
+  return value;
+}
+JSON* json_set_float(JSON* node, const char* key, float value) {
+  if (!key || !node) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_FLOAT);
+  json_value->value_float = value;
+  json_value->value_int = (int)value;
+  json_value->value_uint32 = (uint32_t)value;
+  json_set(node, key, json_value);
+  return json_value;
+}
+
+/*JSON* json_set_double(JSON* node, const char* key, double value) {
+  if (!key || !node) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_DOUBLE);
+  json_value->value_float = (float)value;
+  json_value->value_double = value;
+  json_set(node, key, json_value);
+  return json_value;
+}*/
+JSON* json_set_uint32(JSON* node, const char* key, uint32_t value) {
+  if (!key || !node) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_UINT32);
+  json_value->value_float = (float)value;
+  json_value->value_uint32 = value;
+  json_set(node, key, json_value);
+  return json_value;
+}
+
+JSON* json_set_uint64(JSON* node, const char* key, uint64_t value) {
+  if (!key || !node) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_UINT64);
+  json_value->value_float = (float)value;
+  json_value->value_uint64 = value;
+  json_set(node, key, json_value);
+  return json_value;
+}
+
+JSON* json_set_int32(JSON* node, const char* key, int32_t value) {
+  if (!key || !node) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_INT32);
+  json_value->value_float = (float)value;
+  json_value->value_int32 = value;
+  json_value->value_uint32 = (uint32_t)value;
+  json_set(node, key, json_value);
+  return json_value;
+}
+
+JSON* json_set_int64(JSON* node, const char* key, int64_t value) {
+  if (!key || !node) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_INT64);
+  json_value->value_float = (float)value;
+  json_value->value_int64 = value;
+  json_value->value_uint64 = (uint64_t)value;
+  json_set(node, key, json_value);
+  return json_value;
+}
+
+JSON* json_set_number(JSON* node, const char* key, float value) {
+  if (!key || !node) return 0;
+  return json_set_float(node, key, value);
+}
+JSON* json_set_array(JSON* node, const char* key, JSON** children, uint32_t length) {
+  if (!key || !node || !children || !length) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_ARRAY);
+  json_value->children = children;
+  json_value->children_length = length;
+  json_set(node, key, json_value);
+  return json_value;
+}
+
+JSON* json_set_string(JSON* node, const char* key, const char* value) {
+  if (!key || !node || !value) return 0;
+  JSON* json_value = init_fj_node(FJ_NODE_STRING);
+  json_value->value_str = strdup(value);
+  json_set(node, key, json_value);
+  return json_value;
+}
+
+JSON* json_push(JSON* node, const char* key, JSON* value) {
+  if (!key || !node || !value) return 0;
+  if (!value) {
+    fprintf(stderr, "json_push: Error, trying to push NULL value.\n");
+    return 0;
+  }
+  JSON* existing = json_get(node, key);
+  if (existing) {
+    fj_node_add_child(existing, value);
+  } else {
+    JSON** arr = (JSON**)calloc(1, sizeof(JSON*));
+    arr[0] = value;
+    json_set_array(node, key, arr, 1);
+  }
+
+  return value;
+}
+
+
+int json_write(JSON* node, const char* filepath, const char* mode) {
+  if (!node || !filepath) return 0;
+  FILE* fp = fopen(filepath, mode);
+
+  if (!fp) {
+    fprintf(stderr, "json_write: Failed to open `%s` for writing mode=`%s`.\n", filepath, mode);
+    return 0;
+  }
+
+  char* json_str = json_stringify(node);
+
+  if (!json_str) {
+    fprintf(stderr, "json_write: failed to stringify json.\n");
+    return 0;
+  }
+
+  uint32_t size = strlen(json_str) * sizeof(char);
+
+  if (!fwrite(&json_str[0], size, 1, fp)) {
+    fprintf(stderr, "json_write: error writing data to file `%s` mode=`%s`\n", filepath, mode);
+  }
+
+  return 1;
 }

@@ -30,6 +30,12 @@ static void *json_async_process(void *ptr) {
   }
 
   FJParser parser = (FJParser){&lexer, 0};
+
+
+  if (options) {
+    parser.ignore_int_types = options->ignore_int_types;
+  }
+
   JSON *root = parse(&parser);
 
   pthread_mutex_lock(&as->lock);
@@ -48,6 +54,7 @@ JSONAsync *json_parse_async(const char *contents, JSONOptions *options) {
   if (options) {
     as->options = FJ_CALLOC(JSONOptions, 1);
     as->options->optimized_strings = options->optimized_strings;
+    as->options->ignore_int_types = options->ignore_int_types;
   }
 
   as->contents = strdup(contents);

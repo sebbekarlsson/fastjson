@@ -7,6 +7,7 @@
 typedef struct FAST_JSON_PARSER_STRUCT {
   FJLexer *lexer;
   FJToken *token;
+  unsigned int ignore_int_types;
 } FJParser;
 
 FJNode *parse(FJParser *parser);
