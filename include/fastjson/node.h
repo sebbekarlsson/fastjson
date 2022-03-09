@@ -1,8 +1,8 @@
 #ifndef FAST_JSON_NODE_H
 #define FAST_JSON_NODE_H
+#include <fastjson/config.h>
 #include <hashmap/map.h>
 #include <stdint.h>
-#include <fastjson/config.h>
 
 struct FAST_JSON_LEXER_STRUCT;
 
@@ -16,7 +16,7 @@ typedef enum {
   FJ_NODE_INT32,
   FJ_NODE_INT64,
   FJ_NODE_FLOAT,
-  //FJ_NODE_DOUBLE,
+  // FJ_NODE_DOUBLE,
   FJ_NODE_ARRAY,
   FJ_NODE_TUPLE,
   FJ_NODE_ERROR,
@@ -28,7 +28,7 @@ typedef struct FAST_JSON_NODE_STRUCT {
   FJNodeType type;
   char *value_str;
   float value_float;
-  //double value_double;
+  // double value_double;
   int value_int;
   uint32_t value_uint32;
   uint64_t value_uint64;

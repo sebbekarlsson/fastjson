@@ -7,7 +7,7 @@ FJNode *init_fj_node(FJNodeType type) {
   FJNode *node = FJ_CALLOC(FJNode, 1);
   node->type = type;
 
-  if (node->type == FJ_NODE_DICT) {
+  if (node->type == FJ_NODE_DICT || node->type == FJ_NODE_ARRAY) {
     node->map = NEW_MAP();
   }
 
@@ -68,8 +68,9 @@ void fj_node_free(FJNode *node) {
 void fj_node_assign_dict(FJNode *node, const char *key, FJNode *value) {
   if (!node)
     return;
-  if (!node->map)
-    return;
+  if (!node->map) {
+    node->map = NEW_MAP();
+  }
 
   map_set(node->map, (char *)key, value);
 }

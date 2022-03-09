@@ -31,7 +31,6 @@ static void *json_async_process(void *ptr) {
 
   FJParser parser = (FJParser){&lexer, 0};
 
-
   if (options) {
     parser.ignore_int_types = options->ignore_int_types;
   }

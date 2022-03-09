@@ -22,11 +22,11 @@ void fj_string_concat(FJString *str, const char *value) {
     return;
   uint32_t length = strlen(value);
   uint32_t bytes_needed = (length + 1) * sizeof(char);
-  //uint32_t bytes_left = str->bytes_left;
+  // uint32_t bytes_left = str->bytes_left;
   uint32_t bytes_used = str->length * sizeof(char);
   uint32_t new_pos = bytes_used;
 
-  //char *end = &str->value[str->length * sizeof(char)];
+  // char *end = &str->value[str->length * sizeof(char)];
 
   if (str->bytes_left <= bytes_needed) {
     // uint32_t extra_size = (bytes_needed + PADDING) * sizeof(char);
@@ -53,11 +53,13 @@ void fj_string_concat_char(FJString *str, char c) {
 #define STR_LEN_32 11 // 10 + 1
 #define STR_LEN_64 21 // 20 + 1
 
-JSONIntegerType fj_string_int_type(const char* str) {
-  if (!str) return JSON_UINT32;
+JSONIntegerType fj_string_int_type(const char *str) {
+  if (!str)
+    return JSON_UINT32;
 
   unsigned int is_signed = (unsigned int)(str[0] == '-');
 
-  if (strlen(str) >= STR_LEN_64) return is_signed ? JSON_INT64 : JSON_UINT64;
+  if (strlen(str) >= STR_LEN_64)
+    return is_signed ? JSON_INT64 : JSON_UINT64;
   return is_signed ? JSON_INT32 : JSON_UINT32;
 }

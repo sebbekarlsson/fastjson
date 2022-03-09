@@ -90,7 +90,12 @@ static inline char *collect_number(FJLexer *lexer, FJTokenType *type) {
   FJString str = FJ_STRING("");
   *type = FJ_TOKEN_INT;
 
-  while (isdigit(lexer->c)) {
+  while (isdigit(lexer->c) || lexer->c == '-') {
+    concat(&str, lexer);
+  }
+
+  while (lexer->c == 'E' || lexer->c == 'e' || lexer->c == '-' ||
+         isalnum(lexer->c)) {
     concat(&str, lexer);
   }
 
@@ -101,6 +106,11 @@ static inline char *collect_number(FJLexer *lexer, FJTokenType *type) {
     }
 
     *type = FJ_TOKEN_FLOAT;
+  }
+
+  while (lexer->c == 'E' || lexer->c == 'e' || lexer->c == '-' ||
+         isalnum(lexer->c)) {
+    concat(&str, lexer);
   }
 
   return str.value;
@@ -169,6 +179,11 @@ FJToken lex(FJLexer *lexer) {
 
   FJTokenType type = char_to_token_type(lexer->c);
   FJToken token = FJ_TOKEN(type, 0, lexer->c);
+
+  if (lexer->c == '-' && isalnum(peek(lexer, 1))) {
+    token.value = collect_number(lexer, &token.type);
+    return token;
+  }
 
   switch (token.type) {
   case FJ_TOKEN_ID: {

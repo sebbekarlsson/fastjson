@@ -1,14 +1,18 @@
 #include <fastjson/json.h>
 #include <stdio.h>
 
-int main(int argc, char* argv[]) {
-  JSON* dict = NEW_JSON_DICT();
-  json_set_string(dict, "name", "john doe");
-  json_set_int(dict, "age", 33);
-  json_set_float(dict, "weight", 2132.5f);
+int main(int argc, char *argv[]) {
+  JSONOptions options = {};
 
-  json_write(dict, "data.json", "w+");
+  JSON *j = json_parse_file(argv[1], &options);
 
+  JSONIterator it = json_get_array(j, "nodes");
+
+  JSON *current = 0;
+  while ((current = json_iterator_next(&it)) != 0) {
+    uint32_t m = json_get_uint32(current, "mesh");
+    printf("%d\n", m);
+  }
   return 0;
 }
 
