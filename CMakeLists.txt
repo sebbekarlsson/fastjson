@@ -57,7 +57,7 @@ include(FetchContent)
 
 FetchContent_Declare(
   hashmap_static
-  GIT_REPOSITORY https://github.com/sebbekarlsson/hashmap.git
+  GIT_REPOSITORY /home/ianertson/workspace/hashmap
   )
 
 if (NOT TARGET hashmap_static)

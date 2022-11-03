@@ -200,6 +200,10 @@ JSON *json_set_int(JSON *node, const char *key, int64_t value) {
 float json_get_number(JSON *node, const char *key) {
   return OR(json_get_float(node, key), (float)json_get_int(node, key));
 }
+float json_get_value_number(JSON* node) {
+  if (!node) return 0.0f;
+  return OR(node->value_float, OR(node->value_int, OR(node->value_int32, OR(node->value_int64, OR(node->value_uint32, node->value_uint64)))));
+}
 char *json_get_string(JSON *node, const char *key) {
   JSON *value = json_get(node, key);
   if (!value)

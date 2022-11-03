@@ -77,6 +77,8 @@ void json_values(JSON *node, JSON **values, JSON_LENGTH_INT *len);
 unsigned int json_is_array(JSON *json);
 unsigned int json_is_dict(JSON *json);
 
+float json_get_value_number(JSON* node);
+
 char *json_key(JSON *node);
 
 char *json_stringify(JSON *node);
