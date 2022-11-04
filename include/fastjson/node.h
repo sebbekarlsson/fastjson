@@ -28,12 +28,6 @@ typedef struct FAST_JSON_NODE_STRUCT {
   FJNodeType type;
   char *value_str;
   float value_float;
-  // double value_double;
-  int value_int;
-  uint32_t value_uint32;
-  uint64_t value_uint64;
-  int32_t value_int32;
-  int64_t value_int64;
   struct FAST_JSON_NODE_STRUCT **children;
   JSON_LENGTH_INT children_length;
   struct FAST_JSON_NODE_STRUCT *value;

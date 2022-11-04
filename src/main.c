@@ -6,12 +6,10 @@ int main(int argc, char *argv[]) {
 
   JSON *j = json_parse_file(argv[1], &options);
 
-  JSONIterator it = json_get_array(j, "nodes");
+  JSON* p = json_get(j, "test");
 
-  JSON *current = 0;
-  while ((current = json_iterator_next(&it)) != 0) {
-    uint32_t m = json_get_uint32(current, "mesh");
-    printf("%d\n", m);
+  if (p != 0) {
+    printf("%12.6f\n", json_get_value_number(p));
   }
   return 0;
 }

@@ -72,17 +72,11 @@ static inline FJNode *parse_int(FJParser *parser) {
   if (!value)
     return node;
 
-  if (parser->ignore_int_types) {
-    node->value_int = atoi(value);
-    node->value_uint32 = node->value_int;
-  } else {
-    node->value_uint64 = atoll(value);
-    node->value_uint32 = atol(value);
-    node->value_int = node->value_uint32;
+  node->value_float = atof(value);
 
-    JSONIntegerType int_type = fj_string_int_type(value);
+  JSONIntegerType int_type = fj_string_int_type(value);
 
-    switch (int_type) {
+  switch (int_type) {
     case JSON_UINT32:
       node->type = FJ_NODE_UINT32;
       break;
@@ -96,7 +90,6 @@ static inline FJNode *parse_int(FJParser *parser) {
       node->type = FJ_NODE_INT64;
       break;
     default: { node->type = FJ_NODE_INT; }
-    }
   }
 
   CAPTURE_ERROR(node, next(parser, FJ_TOKEN_INT));
