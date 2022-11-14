@@ -83,4 +83,7 @@ char *json_key(JSON *node);
 
 char *json_stringify(JSON *node);
 
+
+JSON* json_new_dict();
+
 #endif

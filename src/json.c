@@ -615,3 +615,7 @@ char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index) {
 
   return value->value_str;
 }
+
+JSON* json_new_dict() {
+  return init_fj_node(FJ_NODE_DICT);
+}
