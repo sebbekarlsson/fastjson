@@ -3,14 +3,22 @@
 
 int main(int argc, char *argv[]) {
   JSONOptions options = {};
+  options.optimized_strings = 1;
 
   JSON *j = json_parse_file(argv[1], &options);
 
-  JSON* p = json_get(j, "test");
 
-  if (p != 0) {
-    printf("%12.6f\n", json_get_value_number(p));
+  JSONIterator it = {0};
+
+  it = json_iterate_kv(j);
+
+  JSON* kv = 0;
+  while ((kv = json_iterator_next(&it))) {
+    if (json_array_includes_string(kv->value, "person ", true)) {
+      printf("yeah!\n");
+    }
   }
+  printf("done\n");
   return 0;
 }
 

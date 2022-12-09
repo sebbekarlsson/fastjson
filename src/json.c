@@ -93,6 +93,26 @@ JSONIterator json_iterate_kv(JSON *node) {
 
   return iterator;
 }
+
+int json_iterate_kv2(JSON *node, JSONIterator* it) {
+  if (!json_is_dict(node)) {
+    fprintf(stderr,
+            "json warning: trying to iterate over %p which is not a dict.\n",
+            node);
+    return 0;
+  }
+  if (!node->children) {
+    return 0;
+  }
+
+  it->index = 0;
+  it->length = node->children_length;
+  it->items = node->children;
+  it->current = it->items[it->index];
+
+  return node->children != 0 && node->children_length > 0;
+}
+
 JSON *json_iterator_next(JSONIterator *iterator) {
   JSON *current = iterator->current;
 
@@ -105,6 +125,28 @@ JSON *json_iterator_next(JSONIterator *iterator) {
     iterator->current = iterator->items[iterator->index];
   }
   return current;
+}
+
+bool json_array_includes_string(JSON* node, const char* value, bool fuzzy) {
+  if (!node || !value) return false;
+  if (!json_is_array(node)) return false;
+
+  JSONIterator it = json_iterate(node);
+
+  JSON* child = 0;
+
+  while ((child = json_iterator_next(&it))) {
+    if (child->value_str == 0) continue;
+    if (strcmp(child->value_str, value) == 0) return true;
+
+    if (fuzzy) {
+      if (strstr(child->value_str, value) != 0) return true;
+      if (strstr(value, child->value_str) != 0) return true;
+      if (strcasecmp(child->value_str, value) == 0) return true;
+    }
+  }
+
+  return false;
 }
 
 JSON *json_get(JSON *node, const char *key) {

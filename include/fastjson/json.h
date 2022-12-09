@@ -4,6 +4,7 @@
 #include <fastjson/config.h>
 #include <fastjson/node.h>
 #include <fastjson/parse.h>
+#include <stdbool.h>
 
 #define NEW_JSON_DICT() (init_fj_node(FJ_NODE_DICT))
 #define NEW_JSON_ARRAY() (init_fj_node(FJ_NODE_ARRAY))
@@ -19,6 +20,10 @@ typedef struct FAST_JSON_ITERATOR_STRUCT {
 
 JSONIterator json_iterate(JSON *node);
 JSONIterator json_iterate_kv(JSON *node);
+
+int json_iterate_kv2(JSON *node, JSONIterator* it);
+
+
 JSON *json_iterator_next(JSONIterator *iterator);
 
 JSON *json_parse(const char *contents, JSONOptions *options);
@@ -39,6 +44,8 @@ uint64_t json_get_array_item_uint64(JSON *node, JSON_LENGTH_INT index);
 int64_t json_get_array_item_int64(JSON *node, JSON_LENGTH_INT index);
 int32_t json_get_array_item_int32(JSON *node, JSON_LENGTH_INT index);
 char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index);
+
+bool json_array_includes_string(JSON* node, const char* value, bool fuzzy);
 
 float json_get_float(JSON *node, const char *key);
 // double json_get_double(JSON *node, const char *key);
