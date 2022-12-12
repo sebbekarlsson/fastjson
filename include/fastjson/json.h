@@ -18,6 +18,11 @@ typedef struct FAST_JSON_ITERATOR_STRUCT {
   JSON_LENGTH_INT length;
 } JSONIterator;
 
+typedef struct {
+  JSON* node;
+  float score;
+} JSONMatch;
+
 JSONIterator json_iterate(JSON *node);
 JSONIterator json_iterate_kv(JSON *node);
 
@@ -46,6 +51,13 @@ int32_t json_get_array_item_int32(JSON *node, JSON_LENGTH_INT index);
 char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index);
 
 bool json_array_includes_string(JSON* node, const char* value, bool fuzzy);
+
+bool json_array_find_match(
+  JSON* node,
+  const char* value,
+  bool fuzzy,
+  JSONMatch* match
+);
 
 float json_get_float(JSON *node, const char *key);
 // double json_get_double(JSON *node, const char *key);

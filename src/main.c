@@ -14,8 +14,10 @@ int main(int argc, char *argv[]) {
 
   JSON* kv = 0;
   while ((kv = json_iterator_next(&it))) {
-    if (json_array_includes_string(kv->value, "person ", true)) {
-      printf("yeah!\n");
+
+    JSONMatch match = {0};
+    if (json_array_find_match(kv->value, "ardboard", true, &match)) {
+      printf("found it, score: %12.6f\n", match.score);
     }
   }
   printf("done\n");

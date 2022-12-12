@@ -149,6 +149,53 @@ bool json_array_includes_string(JSON* node, const char* value, bool fuzzy) {
   return false;
 }
 
+bool json_array_find_match(
+  JSON* node,
+  const char* value,
+  bool fuzzy,
+  JSONMatch* match
+) {
+  if (!node || !value) return false;
+  if (!json_is_array(node)) return false;
+
+  JSONIterator it = json_iterate(node);
+
+  JSON* child = 0;
+
+  match->score = 0;
+  match->node = 0;
+
+  while ((child = json_iterator_next(&it))) {
+    if (child->value_str == 0) continue;
+    if (strcmp(child->value_str, value) == 0) {
+      match->score = 1.0f;
+      match->node = child;
+      return true;
+    }
+
+    if (strcasecmp(child->value_str, value) == 0) {
+      match->score = 0.9f;
+      match->node = child;
+      return true;
+    }
+
+    if (fuzzy) {
+      if (strstr(child->value_str, value) != 0) {
+        match->score = 0.1f;
+        match->node = child;
+        return true;
+      }
+      if (strstr(value, child->value_str) != 0) {
+        match->score = 0.2f;
+        match->node = child;
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 JSON *json_get(JSON *node, const char *key) {
   if (!node)
     return 0;
