@@ -16,8 +16,8 @@ int main(int argc, char *argv[]) {
   while ((kv = json_iterator_next(&it))) {
 
     JSONMatch match = {0};
-    if (json_array_find_match(kv->value, "ardboard", true, &match)) {
-      printf("found it, score: %12.6f\n", match.score);
+    if (json_array_find_match(kv->value, "cardboard", true, &match)) {
+      printf("found it, score: %12.6f, %s\n", match.score, match.node->value_str);
     }
   }
   printf("done\n");

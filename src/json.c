@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/param.h>
+#include <math.h>
 
 JSON *json_parse(const char *contents, JSONOptions *options) {
   char *ctnt = (char *)contents;
@@ -149,6 +150,65 @@ bool json_array_includes_string(JSON* node, const char* value, bool fuzzy) {
   return false;
 }
 
+
+static float json_compare_string(const char* a, const char* b) {
+  if (!a || !b) return 0.0f;
+
+  int64_t len_a = strlen(a);
+  int64_t len_b = strlen(b);
+  int64_t max_len = MAX(len_a, len_b);
+  int64_t min_len = MIN(len_a, len_b);
+
+  const char* max_value = len_a > len_b ? a : b;
+  const char* min_value = len_a < len_b ? a : b;
+
+  char first_char_a = a[0];
+  char first_char_b = b[0];
+
+  char last_char_a = a[MAX(len_a-1, 0)];
+  char last_char_b = b[MAX(len_b-1, 0)];
+
+  float score = (float)min_len / (float)max_len;
+
+  for (int64_t i = 0; i < min_len; i++) {
+    char ca = a[i % len_a];
+    char cb = b[i % len_b];
+
+    if (ca == cb) {
+      score += 1.0f / (float)max_len;
+    } else {
+      score *= 0.9f;
+    }
+  }
+
+  if (strcmp(a, b) == 0) {
+    score += 1.0f;
+  }
+
+  if (strcasecmp(a, b) == 0) {
+    score += 0.9f;
+  }
+
+  float len_diff = (float)max_len - (float)min_len;
+  score = fmaxf(0.0f, score - len_diff);
+
+  if (strstr(max_value, min_value) != 0) {
+    score += 0.5f;
+  }
+
+
+  if (first_char_a == first_char_b) {
+    score += 0.1f;
+  }
+
+  if (last_char_a == last_char_b) {
+    score += 0.1f;
+  }
+
+
+  return score;
+}
+
 bool json_array_find_match(
   JSON* node,
   const char* value,
@@ -168,25 +228,25 @@ bool json_array_find_match(
   while ((child = json_iterator_next(&it))) {
     if (child->value_str == 0) continue;
     if (strcmp(child->value_str, value) == 0) {
-      match->score = 1.0f;
+      match->score = json_compare_string(child->value_str, value);
       match->node = child;
       return true;
     }
 
     if (strcasecmp(child->value_str, value) == 0) {
-      match->score = 0.9f;
+      match->score = json_compare_string(child->value_str, value);
       match->node = child;
       return true;
     }
 
     if (fuzzy) {
       if (strstr(child->value_str, value) != 0) {
-        match->score = 0.1f;
+        match->score = json_compare_string(child->value_str, value);
         match->node = child;
         return true;
       }
       if (strstr(value, child->value_str) != 0) {
-        match->score = 0.2f;
+        match->score = json_compare_string(child->value_str, value);
         match->node = child;
         return true;
       }
