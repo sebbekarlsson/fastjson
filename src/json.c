@@ -4,10 +4,10 @@
 #include <fastjson/mem.h>
 #include <fastjson/node.h>
 #include <fastjson/utils.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/param.h>
-#include <math.h>
 
 JSON *json_parse(const char *contents, JSONOptions *options) {
   char *ctnt = (char *)contents;
@@ -95,7 +95,7 @@ JSONIterator json_iterate_kv(JSON *node) {
   return iterator;
 }
 
-int json_iterate_kv2(JSON *node, JSONIterator* it) {
+int json_iterate_kv2(JSON *node, JSONIterator *it) {
   if (!json_is_dict(node)) {
     fprintf(stderr,
             "json warning: trying to iterate over %p which is not a dict.\n",
@@ -128,45 +128,52 @@ JSON *json_iterator_next(JSONIterator *iterator) {
   return current;
 }
 
-bool json_array_includes_string(JSON* node, const char* value, bool fuzzy) {
-  if (!node || !value) return false;
-  if (!json_is_array(node)) return false;
+bool json_array_includes_string(JSON *node, const char *value, bool fuzzy) {
+  if (!node || !value)
+    return false;
+  if (!json_is_array(node))
+    return false;
 
   JSONIterator it = json_iterate(node);
 
-  JSON* child = 0;
+  JSON *child = 0;
 
   while ((child = json_iterator_next(&it))) {
-    if (child->value_str == 0) continue;
-    if (strcmp(child->value_str, value) == 0) return true;
+    if (child->value_str == 0)
+      continue;
+    if (strcmp(child->value_str, value) == 0)
+      return true;
 
     if (fuzzy) {
-      if (strstr(child->value_str, value) != 0) return true;
-      if (strstr(value, child->value_str) != 0) return true;
-      if (strcasecmp(child->value_str, value) == 0) return true;
+      if (strstr(child->value_str, value) != 0)
+        return true;
+      if (strstr(value, child->value_str) != 0)
+        return true;
+      if (strcasecmp(child->value_str, value) == 0)
+        return true;
     }
   }
 
   return false;
 }
 
-
-static float json_compare_string(const char* a, const char* b) {
-  if (!a || !b) return 0.0f;
+static float json_compare_string(const char *a, const char *b) {
+  if (!a || !b)
+    return 0.0f;
 
   int64_t len_a = strlen(a);
   int64_t len_b = strlen(b);
   int64_t max_len = MAX(len_a, len_b);
   int64_t min_len = MIN(len_a, len_b);
 
-  const char* max_value = len_a > len_b ? a : b;
-  const char* min_value = len_a < len_b ? a : b;
+  const char *max_value = len_a > len_b ? a : b;
+  const char *min_value = len_a < len_b ? a : b;
 
   char first_char_a = a[0];
   char first_char_b = b[0];
 
-  char last_char_a = a[MAX(len_a-1, 0)];
-  char last_char_b = b[MAX(len_b-1, 0)];
+  char last_char_a = a[MAX(len_a - 1, 0)];
+  char last_char_b = b[MAX(len_b - 1, 0)];
 
   float score = (float)min_len / (float)max_len;
 
@@ -196,7 +203,6 @@ static float json_compare_string(const char* a, const char* b) {
     score += 0.5f;
   }
 
-
   if (first_char_a == first_char_b) {
     score += 0.1f;
   }
@@ -205,28 +211,26 @@ static float json_compare_string(const char* a, const char* b) {
     score += 0.1f;
   }
 
-
   return score;
 }
 
-bool json_array_find_match(
-  JSON* node,
-  const char* value,
-  bool fuzzy,
-  JSONMatch* match
-) {
-  if (!node || !value) return false;
-  if (!json_is_array(node)) return false;
+bool json_array_find_match(JSON *node, const char *value, bool fuzzy,
+                           JSONMatch *match) {
+  if (!node || !value)
+    return false;
+  if (!json_is_array(node))
+    return false;
 
   JSONIterator it = json_iterate(node);
 
-  JSON* child = 0;
+  JSON *child = 0;
 
   match->score = 0;
   match->node = 0;
 
   while ((child = json_iterator_next(&it))) {
-    if (child->value_str == 0) continue;
+    if (child->value_str == 0)
+      continue;
     if (strcmp(child->value_str, value) == 0) {
       match->score = json_compare_string(child->value_str, value);
       match->node = child;
@@ -341,11 +345,19 @@ JSON *json_set_int(JSON *node, const char *key, int64_t value) {
 float json_get_number(JSON *node, const char *key) {
   return OR(json_get_float(node, key), (float)json_get_int(node, key));
 }
-float json_get_value_number(JSON* node) {
-  if (!node) return 0.0f;
+float json_get_value_number(JSON *node) {
+  if (!node)
+    return 0.0f;
 
   return node->value_float;
 }
+
+const char *json_get_value_string(JSON *node) {
+  if (!node)
+    return 0;
+  return node->value_str;
+}
+
 char *json_get_string(JSON *node, const char *key) {
   JSON *value = json_get(node, key);
   if (!value)
@@ -405,7 +417,7 @@ unsigned int json_is_dict(JSON *json) {
   return json->type == FJ_NODE_DICT;
 }
 
-char *json_key(JSON *node) {
+const char *json_key(JSON *node) {
   if (!node)
     return 0;
   if (!node->key)
@@ -460,9 +472,7 @@ char *json_stringify_string(JSON *node) {
 
 char *json_stringify_float(JSON *node) {
   char buff[128];
-  sprintf(
-      buff, "%12.6f",
-      node->value_float);
+  sprintf(buff, "%12.6f", node->value_float);
   return strdup(buff);
 }
 
@@ -474,8 +484,7 @@ OR(node->value_uint32, node->value_int32))); return strdup(buff);
 
 char *json_stringify_int(JSON *node) {
   char buff[128];
-  sprintf(buff, "%d",
-          (int)node->value_float);
+  sprintf(buff, "%d", (int)node->value_float);
   return strdup(buff);
 }
 
@@ -487,8 +496,7 @@ char *json_stringify_uint32(JSON *node) {
 
 char *json_stringify_uint64(JSON *node) {
   char buff[128];
-  sprintf(buff, "%ld",
-          (uint64_t)node->value_float);
+  sprintf(buff, "%ld", (uint64_t)node->value_float);
   return strdup(buff);
 }
 
@@ -547,7 +555,9 @@ char *json_stringify(JSON *node) {
   case FJ_NODE_TUPLE:
     return json_stringify_tuple(node);
     break;
-  default: { return strdup(""); } break;
+  default: {
+    return strdup("");
+  } break;
   }
 }
 
@@ -556,6 +566,23 @@ JSON *json_set(JSON *node, const char *key, JSON *value) {
     return 0;
   JSON *existing = json_get(node, key);
   if (existing) {
+    if (existing->type == FJ_NODE_STRING && value->type == FJ_NODE_STRING) {
+      const char *next_val = json_get_value_string(value);
+
+      if (existing->value_str) {
+        free(existing->value_str);
+        existing->value_str = 0;
+      }
+
+      existing->value_str = strdup(next_val);
+
+      return value;
+    }
+
+    if (json_is_scalar(*existing) && json_is_scalar(*value)) {
+      existing->value_float = value->value_float;
+      return value;
+    }
     json_free(existing);
   }
 
@@ -757,7 +784,7 @@ int32_t json_get_array_item_int32(JSON *node, JSON_LENGTH_INT index) {
 
   return value->value_float;
 }
-char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index) {
+const char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index) {
   JSON *value = json_get_array_item(node, index);
   if (!value)
     return 0;
@@ -765,6 +792,113 @@ char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index) {
   return value->value_str;
 }
 
-JSON* json_new_dict() {
-  return init_fj_node(FJ_NODE_DICT);
+JSON *json_new_dict() { return init_fj_node(FJ_NODE_DICT); }
+
+bool json_is_scalar(JSON json) {
+  return (json.type == FJ_NODE_FLOAT || json.type == FJ_NODE_INT ||
+          json.type == FJ_NODE_INT32 || json.type == FJ_NODE_UINT32 ||
+          json.type == FJ_NODE_INT64 || json.type == FJ_NODE_UINT64);
+}
+
+void json_copy_string_into(JSON src, JSON *target) {
+  if (src.type != FJ_NODE_STRING || !src.value_str)
+    return;
+  target->type = FJ_NODE_STRING;
+  target->value_str = strdup(src.value_str);
+}
+
+JSON *json_copy(JSON node) {
+
+  if (node.type == FJ_NODE_STRING) {
+    JSON *new_str = init_fj_node(FJ_NODE_STRING);
+    json_copy_string_into(node, new_str);
+    return new_str;
+  }
+
+  if (json_is_scalar(node)) {
+    JSON *out = init_fj_node(node.type);
+    out->value_float = node.value_float;
+    return out;
+  }
+
+  if (json_is_array(&node)) {
+    JSON *arr = init_fj_node(FJ_NODE_ARRAY);
+    JSONIterator it = json_iterate(&node);
+
+    JSON *child = 0;
+
+    while ((child = json_iterator_next(&it))) {
+      JSON *copied_child = json_copy(*child);
+      if (copied_child) {
+        json_push(arr, 0, copied_child);
+      }
+    }
+    return arr;
+  }
+
+  if (json_is_dict(&node)) {
+    JSON *new_dict = json_new_dict();
+    JSONIterator it = json_iterate_kv(&node);
+    JSON *child = 0;
+    while ((child = json_iterator_next(&it))) {
+      if (!child->key)
+        continue;
+      const char *key = json_get_value_string(child);
+      if (!key)
+        key = json_get_value_string(child->key);
+      JSON *value = child->value;
+      if (!key || !value)
+        continue;
+
+      JSON *copied_value = json_copy(*value);
+
+      if (!copied_value)
+        continue;
+
+      json_set(new_dict, key, copied_value);
+    }
+
+    return new_dict;
+  }
+
+  return 0;
+}
+
+int json_merge(JSON *dest, JSON other) {
+  if (!dest)
+    return 0;
+  dest->type = other.type;
+
+  if (json_is_scalar(other)) {
+    dest->value_float = other.value_float;
+    return 1;
+  }
+
+  if (json_is_dict(&other)) {
+    JSONIterator it = json_iterate_kv(&other);
+
+    JSON *child = 0;
+
+    while ((child = json_iterator_next(&it))) {
+      if (!child->key)
+        continue;
+      const char *key = json_get_value_string(child);
+      if (!key)
+        key = json_get_value_string(child->key);
+      JSON *value = child->value;
+      if (!key || !value)
+        continue;
+
+      JSON *copied_value = json_copy(*value);
+
+      if (!copied_value)
+        continue;
+
+      json_set(dest, key, copied_value);
+    }
+
+    return 1;
+  }
+
+  return 0;
 }

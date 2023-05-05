@@ -77,19 +77,21 @@ static inline FJNode *parse_int(FJParser *parser) {
   JSONIntegerType int_type = fj_string_int_type(value);
 
   switch (int_type) {
-    case JSON_UINT32:
-      node->type = FJ_NODE_UINT32;
-      break;
-    case JSON_UINT64:
-      node->type = FJ_NODE_UINT64;
-      break;
-    case JSON_INT32:
-      node->type = FJ_NODE_INT32;
-      break;
-    case JSON_INT64:
-      node->type = FJ_NODE_INT64;
-      break;
-    default: { node->type = FJ_NODE_INT; }
+  case JSON_UINT32:
+    node->type = FJ_NODE_UINT32;
+    break;
+  case JSON_UINT64:
+    node->type = FJ_NODE_UINT64;
+    break;
+  case JSON_INT32:
+    node->type = FJ_NODE_INT32;
+    break;
+  case JSON_INT64:
+    node->type = FJ_NODE_INT64;
+    break;
+  default: {
+    node->type = FJ_NODE_INT;
+  }
   }
 
   CAPTURE_ERROR(node, next(parser, FJ_TOKEN_INT));
@@ -223,7 +225,8 @@ FJNode *parse_entry(FJParser *parser) {
   case FJ_TOKEN_FLOAT:
     return parse_float(parser);
     break;
-  default: {};
+  default: {
+  };
   }
   FJNode *noop = init_fj_node(FJ_NODE_NOOP);
   return noop;

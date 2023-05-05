@@ -19,15 +19,14 @@ typedef struct FAST_JSON_ITERATOR_STRUCT {
 } JSONIterator;
 
 typedef struct {
-  JSON* node;
+  JSON *node;
   float score;
 } JSONMatch;
 
 JSONIterator json_iterate(JSON *node);
 JSONIterator json_iterate_kv(JSON *node);
 
-int json_iterate_kv2(JSON *node, JSONIterator* it);
-
+int json_iterate_kv2(JSON *node, JSONIterator *it);
 
 JSON *json_iterator_next(JSONIterator *iterator);
 
@@ -48,16 +47,12 @@ uint32_t json_get_array_item_uint32(JSON *node, JSON_LENGTH_INT index);
 uint64_t json_get_array_item_uint64(JSON *node, JSON_LENGTH_INT index);
 int64_t json_get_array_item_int64(JSON *node, JSON_LENGTH_INT index);
 int32_t json_get_array_item_int32(JSON *node, JSON_LENGTH_INT index);
-char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index);
+const char *json_get_array_item_string(JSON *node, JSON_LENGTH_INT index);
 
-bool json_array_includes_string(JSON* node, const char* value, bool fuzzy);
+bool json_array_includes_string(JSON *node, const char *value, bool fuzzy);
 
-bool json_array_find_match(
-  JSON* node,
-  const char* value,
-  bool fuzzy,
-  JSONMatch* match
-);
+bool json_array_find_match(JSON *node, const char *value, bool fuzzy,
+                           JSONMatch *match);
 
 float json_get_float(JSON *node, const char *key);
 // double json_get_double(JSON *node, const char *key);
@@ -70,6 +65,7 @@ int64_t json_get_int(JSON *node, const char *key);
 
 float json_get_number(JSON *node, const char *key);
 char *json_get_string(JSON *node, const char *key);
+const char *json_get_value_string(JSON *node);
 JSONIterator json_get_array(JSON *node, const char *key);
 
 JSON *json_set(JSON *node, const char *key, JSON *value);
@@ -89,6 +85,9 @@ JSON *json_set_array(JSON *node, const char *key, JSON **children,
                      uint32_t length);
 JSON *json_push(JSON *node, const char *key, JSON *value);
 
+JSON *json_copy(JSON node);
+int json_merge(JSON *dest, JSON other);
+
 void json_keys(JSON *node, char ***keys, JSON_LENGTH_INT *len);
 
 void json_values(JSON *node, JSON **values, JSON_LENGTH_INT *len);
@@ -96,13 +95,14 @@ void json_values(JSON *node, JSON **values, JSON_LENGTH_INT *len);
 unsigned int json_is_array(JSON *json);
 unsigned int json_is_dict(JSON *json);
 
-float json_get_value_number(JSON* node);
+bool json_is_scalar(JSON json);
 
-char *json_key(JSON *node);
+float json_get_value_number(JSON *node);
+
+const char *json_key(JSON *node);
 
 char *json_stringify(JSON *node);
 
-
-JSON* json_new_dict();
+JSON *json_new_dict();
 
 #endif

@@ -5,22 +5,18 @@ int main(int argc, char *argv[]) {
   JSONOptions options = {};
   options.optimized_strings = 1;
 
-  JSON *j = json_parse_file(argv[1], &options);
+  JSON *a = json_parse("{ \"name\": \"John Doe\", \"age\": 32 }", &options);
+  JSON *b = json_parse(
+      "{ \"name\": \"Sarah\", \"color\": \"red\", \"score\": 5 }", &options);
 
+  json_merge(a, *b);
 
-  JSONIterator it = {0};
+  const char *dumped = json_stringify(a);
 
-  it = json_iterate_kv(j);
-
-  JSON* kv = 0;
-  while ((kv = json_iterator_next(&it))) {
-
-    JSONMatch match = {0};
-    if (json_array_find_match(kv->value, "cardboard", true, &match)) {
-      printf("found it, score: %12.6f, %s\n", match.score, match.node->value_str);
-    }
+  if (dumped) {
+    printf("%s\n", dumped);
   }
-  printf("done\n");
+
   return 0;
 }
 

@@ -51,6 +51,8 @@ const char *fj_token_type_to_str(FJTokenType type) {
   case FJ_TOKEN_EOF:
     return "FJ_TOKEN_EOF";
     break;
-  default: { return "FJ_TOKEN_UNKNOWN"; } break;
+  default: {
+    return "FJ_TOKEN_UNKNOWN";
+  } break;
   }
 }

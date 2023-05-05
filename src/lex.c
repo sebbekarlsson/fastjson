@@ -70,7 +70,8 @@ static inline FJTokenType char_to_token_type(char c) {
   case '"':
     return FJ_TOKEN_DOUBLE_QUOTE;
     break;
-  default: {};
+  default: {
+  };
   }
 
   return FJ_TOKEN_UNKNOWN;
@@ -148,6 +149,30 @@ static inline char *collect_str(FJLexer *lexer) {
   return str.value;
 }
 
+/*static inline void collect_str_view(FJLexer *lexer, JSONStringView* view) {
+  FJString str = FJ_STRING("");
+
+  view->length = 0;
+  char start = lexer->c;
+  advance(lexer);
+  view->ptr = &lexer->src[lexer->i];
+
+  while (lexer->c != start) {
+    // escaped quotes
+    if (lexer->c == '\\' && peek(lexer, 1) == '\\') {
+      concat_view(view, lexer);
+      concat_view(view, lexer);
+      continue;
+    }
+    if (lexer->c == '\\' && peek(lexer, 1) == start) {
+      advance(lexer);
+    }
+    concat_view(view, lexer);
+  }
+
+  advance(lexer);
+  }*/
+
 static inline void collect_str_optimized(FJLexer *lexer, FJToken *token) {
   char start = lexer->c;
   advance(lexer);
@@ -205,7 +230,8 @@ FJToken lex(FJLexer *lexer) {
     token.type = FJ_TOKEN_STRING;
     return token;
   } break;
-  default: {}; break;
+  default: {
+  }; break;
   }
 
   if (!FINISHED(lexer)) {

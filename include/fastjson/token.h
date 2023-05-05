@@ -25,6 +25,7 @@ typedef struct FAST_JSON_TOKEN_STRUCT {
   char c;
   char *start;
   char *end;
+
 } FJToken;
 
 #define FJ_TOKEN(type, value, character) ((FJToken){type, value, character})
