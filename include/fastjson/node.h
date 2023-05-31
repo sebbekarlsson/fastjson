@@ -3,26 +3,32 @@
 #include <fastjson/config.h>
 #include <hashmap/map.h>
 #include <stdint.h>
+#include <fastjson/macros.h>
 
 struct FAST_JSON_LEXER_STRUCT;
 
-typedef enum {
-  FJ_NODE_DICT,
-  FJ_NODE_ID,
-  FJ_NODE_STRING,
-  FJ_NODE_INT,
-  FJ_NODE_UINT32,
-  FJ_NODE_UINT64,
-  FJ_NODE_INT32,
-  FJ_NODE_INT64,
-  FJ_NODE_FLOAT,
-  // FJ_NODE_DOUBLE,
-  FJ_NODE_ARRAY,
-  FJ_NODE_TUPLE,
-  FJ_NODE_ERROR,
-  FJ_NODE_NOOP,
-  FJ_NODE_NONE
-} FJNodeType;
+
+#define FJSON_FOR_EACH_NODE_TYPE(E)\
+  E(FJ_NODE_DICT)\
+  E(FJ_NODE_ID)\
+  E(FJ_NODE_STRING)\
+  E(FJ_NODE_INT)\
+  E(FJ_NODE_UINT32)\
+  E(FJ_NODE_UINT64)\
+  E(FJ_NODE_INT32)\
+  E(FJ_NODE_INT64)\
+  E(FJ_NODE_FLOAT)\
+  E(FJ_NODE_ARRAY)\
+  E(FJ_NODE_TUPLE)\
+  E(FJ_NODE_ERROR)\
+  E(FJ_NODE_NOOP)\
+  E(FJ_NODE_NONE)
+
+typedef enum { FJSON_FOR_EACH_NODE_TYPE(FJSON_GENERATE_ENUM) } FJNodeType;
+
+static const char *const FJSON_NODE_TYPE_STR[] = {
+  FJSON_FOR_EACH_NODE_TYPE(FJSON_GENERATE_STRING)
+};
 
 typedef struct FAST_JSON_NODE_STRUCT {
   FJNodeType type;

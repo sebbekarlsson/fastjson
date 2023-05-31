@@ -57,10 +57,11 @@ unsigned int json_is_array(JSON *json) {
 
 JSONIterator json_iterate(JSON *node) {
   JSONIterator iterator = {};
+  if (!node) return iterator;
   if (!json_is_array(node)) {
     fprintf(stderr,
-            "json warning: trying to iterate over %p which is not an array.\n",
-            node);
+            "json warning: trying to iterate over %p which is not an array. (%s)\n",
+            node, FJSON_NODE_TYPE_STR[node->type]);
     return iterator;
   }
   if (!node->children) {
@@ -77,10 +78,11 @@ JSONIterator json_iterate(JSON *node) {
 
 JSONIterator json_iterate_kv(JSON *node) {
   JSONIterator iterator = {};
+  if (!node) return iterator;
   if (!json_is_dict(node)) {
     fprintf(stderr,
-            "json warning: trying to iterate over %p which is not a dict.\n",
-            node);
+            "json warning: trying to iterate over %p which is not a dict. (%s)\n",
+            node, FJSON_NODE_TYPE_STR[node->type]);
     return iterator;
   }
   if (!node->children) {
